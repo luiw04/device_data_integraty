@@ -46,8 +46,8 @@ namespace Faberton.Energy.Test
                 Identifier = "123456",
                 DeviceId = "device02",
                 Date = DateTime.UtcNow.ToString(),
-                IRMS = 10,
-                Watts = -1
+                IRMS = -1,
+                Watts = 3333
             };
 
             var message = JsonConvert.SerializeObject(data);

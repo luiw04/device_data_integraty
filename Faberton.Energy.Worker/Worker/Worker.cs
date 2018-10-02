@@ -1,6 +1,7 @@
 using Faberton.Energy.Worker.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -42,29 +43,55 @@ namespace Faberton.Energy.Worker
                 {
                     // Reemplazar el dato existente de table storage
                     // Verificar que el dato entrante es menor a 1 h con referencia a el dato temporal
+                    var timeDiff = (DateTime.Parse(tableInfo.Date) - DateTime.Parse(eventData.Date)).Hours;
+                    if(timeDiff < 1)
+                    {
+                        eventData.Watts = eventData.Watts + tableInfo.Watts + 1;
+                        eventData.IRMS = eventData.IRMS + tableInfo.IRMS + 1;
+                        //using (SqlConnection conn = new SqlConnection(sqlConnectionString))
+                        //{
+                        //    var commandText = "INSERT INTO deviceEnergy(id_identifier, id_device, dateDevice, watts, irms) VALUES (@identifier, @device, @date, @watts, @irms)";
+                        //    using (SqlCommand comm = new SqlCommand())
+                        //    {
+                        //        comm.Connection = conn;
+                        //        comm.CommandText = commandText;
+                        //        comm.Parameters.AddWithValue("@identifier", eventData.Identifier);
+
+                        //        comm.Parameters.AddWithValue("@device", eventData.DeviceId);
+                        //        comm.Parameters.AddWithValue("@date", eventData.Date);
+                        //        comm.Parameters.AddWithValue("@watts", eventData.Watts);
+                        //        comm.Parameters.AddWithValue("@irms", eventData.IRMS);
+
+                        //        conn.Open();
+                        //        comm.ExecuteNonQuery();
+                        //    }
+                        //}
+                    }
                     // Si el lapso de diferencia es mayor a 1h ignorar el mensaje entrante y no almacenar en BD
                 }
 
             }
+            else
+            {
+                //using (SqlConnection conn = new SqlConnection(sqlConnectionString))
+                //{
+                //    var commandText = "INSERT INTO deviceEnergy(id_identifier, id_device, dateDevice, watts, irms) VALUES (@identifier, @device, @date, @watts, @irms)";
+                //    using (SqlCommand comm = new SqlCommand())
+                //    {
+                //        comm.Connection = conn;
+                //        comm.CommandText = commandText;
+                //        comm.Parameters.AddWithValue("@identifier", eventData.Identifier);
 
-            //using (SqlConnection conn = new SqlConnection(sqlConnectionString))
-            //{
-            //    var commandText = "INSERT INTO deviceEnergy(id_identifier, id_device, dateDevice, watts, irms) VALUES (@identifier, @device, @date, @watts, @irms)";
-            //    using (SqlCommand comm = new SqlCommand())
-            //    {
-            //        comm.Connection = conn;
-            //        comm.CommandText = commandText;
-            //        comm.Parameters.AddWithValue("@identifier", eventData.Identifier);
+                //        comm.Parameters.AddWithValue("@device", eventData.DeviceId);
+                //        comm.Parameters.AddWithValue("@date", eventData.Date);
+                //        comm.Parameters.AddWithValue("@watts", eventData.Watts);
+                //        comm.Parameters.AddWithValue("@irms", eventData.IRMS);
 
-            //        comm.Parameters.AddWithValue("@device", eventData.DeviceId);
-            //        comm.Parameters.AddWithValue("@date", eventData.Date);
-            //        comm.Parameters.AddWithValue("@watts", eventData.Watts);
-            //        comm.Parameters.AddWithValue("@irms", eventData.IRMS);
-
-            //        conn.Open();
-            //        comm.ExecuteNonQuery();
-            //    }
-            //}
+                //        conn.Open();
+                //        comm.ExecuteNonQuery();
+                //    }
+                //}
+            }
         }
     }
 }
