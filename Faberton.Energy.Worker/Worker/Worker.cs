@@ -1,6 +1,8 @@
+using Faberton.Energy.Worker.Helpers;
 using Faberton.Energy.Worker.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -9,6 +11,8 @@ namespace Faberton.Energy.Worker
 {
     public static class Worker
     {
+        private static CloudTableClient tableClient = AzTableStorage.GetTableClient();
+
         [FunctionName("Worker")]
         public static async Task Run(
             [EventHubTrigger("%EventHubName%", Connection = "ServiceBusConnectionString")]DeviceData eventData,
@@ -18,6 +22,7 @@ namespace Faberton.Energy.Worker
             log.LogInformation($"C# Event Hub trigger function processed a message: {eventData}");
 
             var sqlConnectionString = System.Environment.GetEnvironmentVariable("DatabaseConnectionString", System.EnvironmentVariableTarget.Process);
+            var table = await tableClient.GetTableAsync(AzureFunctions.GetSetting("TableName"));
 
             // Validar que el dato entrante contiene al menos un numero negativo
             // esto significa que el dispositivo esta enviando datos por separado
@@ -42,6 +47,10 @@ namespace Faberton.Energy.Worker
                 else
                 {
                     // Reemplazar el dato existente de table storage
+                    eventData.PartitionKey = eventData.Identifier;
+                    eventData.RowKey = eventData.DeviceId;
+                    await table.ExecuteAsync(TableOperation.InsertOrReplace(eventData));
+
                     // Verificar que el dato entrante es menor a 1 h con referencia a el dato temporal
                     var timeDiff = (DateTime.Parse(tableInfo.Date) - DateTime.Parse(eventData.Date)).Hours;
                     if(timeDiff < 1)
